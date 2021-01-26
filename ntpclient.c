@@ -13,7 +13,6 @@
 
 #define SERVERPORT "123"
 
-
 int digits_only(const char *s) {
     while (*s) {
         if (isdigit(*s++) == 0) return 0;
@@ -28,17 +27,17 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*) sa)->sin6_addr);
 }
 
-struct timespec unmarshal_ntpshort(const uint8_t * timestamp_ptr) {
-    struct timespec t;
-    uint16_t seconds = ntohs( *(uint16_t *) timestamp_ptr);
-    t.tv_sec = seconds; // - 2208988800 not applicable for root dispersion
-    uint16_t fraction = ntohs( *(uint16_t *) (timestamp_ptr + 2));
-    uint64_t nsec = fraction;
-    nsec *= 1000000000;
-    nsec /= 65536;
-    t.tv_nsec = nsec;
-    return t;
-}
+//struct timespec unmarshal_ntpshort(const uint8_t * timestamp_ptr) {
+//    struct timespec t;
+//    uint16_t seconds = ntohs( *(uint16_t *) timestamp_ptr);
+//    t.tv_sec = seconds; // - 2208988800 not applicable for root dispersion
+//    uint16_t fraction = ntohs( *(uint16_t *) (timestamp_ptr + 2));
+//    uint64_t nsec = fraction;
+//    nsec *= 1000000000;
+//    nsec /= 65536;
+//    t.tv_nsec = nsec;
+//    return t;
+//}
 
 long double unmarshal_ntpshort_double(const uint8_t * timestamp_ptr) {
     uint16_t seconds = ntohs( *(uint16_t *) timestamp_ptr);
@@ -62,7 +61,6 @@ struct timespec unmarshal_ntptimestamp(const uint8_t * timestamp_ptr) {
     return t;
 }
 
-
 long double unmarshal_ntptimestamp_double(const uint8_t * timestamp_ptr) {
     uint32_t seconds = ntohl( *(uint32_t *) timestamp_ptr);
     long double sec = seconds - 2208988800; // 2208988800 seconds between year 1900 and 1970
@@ -72,7 +70,6 @@ long double unmarshal_ntptimestamp_double(const uint8_t * timestamp_ptr) {
     sec += nsec;
     return sec;
 }
-
 
 
 int main(int argc, char **argv) {
@@ -87,14 +84,11 @@ int main(int argc, char **argv) {
     struct sockaddr_storage their_addr;
     socklen_t addr_len;
     char s[INET6_ADDRSTRLEN];
-    struct timespec root_dispersion;
     struct timespec t[4];
     long double d[4];
-    long double root_disp_double, offset2, offset1, offset, rtt, delay, dispersion, max, min, t1, t2;
+    long double root_disp_double, offset, rtt, delay, dispersion, max, min, t1, t2;
     const long double two = 2;
     const long double onebillion = 1000000000;
-    time_t offset_sec;
-    long offset_nsec;
 
     if (argc < 3) {
         fprintf(stderr, "usage: ntpclient number_of_requests_per_server server1 server2 server3 ...\n");
@@ -143,8 +137,8 @@ int main(int argc, char **argv) {
             }
             clock_gettime(CLOCK_REALTIME, &t[0]); // TODO: check for errors, maybe move behind sendto()?
 
-//            fprintf(stderr, "ntpclient: sent %d bytes to %s\n", numbytes, argv[i]);
-//            fprintf(stderr, "ntpclient: waiting to recvfrom...\n");
+            fprintf(stderr, "ntpclient: sent %d bytes to %s\n", numbytes, argv[i]);
+            fprintf(stderr, "ntpclient: waiting to recvfrom...\n");
 
             numbytes = 0;
             while ( numbytes < 48 ) {
@@ -162,9 +156,7 @@ int main(int argc, char **argv) {
             fwrite(buf, sizeof(uint8_t), numbytes, stderr);
             fprintf(stderr, "\"\n");
 
-            root_dispersion = unmarshal_ntpshort(buf + 8);
             root_disp_double = unmarshal_ntpshort_double(buf + 8);
-//            fprintf(stderr, "ntpclient: root_dispersion: %lld.%.9ld\n", (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec);
 
             t[1] = unmarshal_ntptimestamp(buf + 32);
             t1 = unmarshal_ntptimestamp_double(buf + 32);
@@ -181,13 +173,7 @@ int main(int argc, char **argv) {
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
 
-            offset2 = ((t1 - d[0]) + (t2 - d[3])) / two;
-
-            offset1 = ((d[1] - d[0]) + (d[2] - d[3])) / two;
-
-            offset_sec = ((t[1].tv_sec - t[0].tv_sec) + (t[2].tv_sec - t[3].tv_sec)) / (time_t)2;
-            offset_nsec = ((t[1].tv_nsec - t[0].tv_nsec) + (t[2].tv_nsec - t[3].tv_nsec)) / (long)2;
-            offset = (long double) offset_sec + ((long double) offset_nsec / (long double) 1000000000);
+            offset = ((t1 - d[0]) + (t2 - d[3])) / two;
 
             rtt = (d[3] - d[0]) - (t2 - t1);
             delay = rtt / two;
@@ -201,17 +187,14 @@ int main(int argc, char **argv) {
             }
             dispersion = max - min;
 
-//            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset2);
-            fprintf(stdout, "%s;%d;%Lf;%Lf;%Lf;%Lf\n", argv[i], j, root_disp_double, dispersion, delay, offset2);
+            fprintf(stdout, "%s;%d;%Lf;%Lf;%Lf;%Lf\n", argv[i], j, root_disp_double, dispersion, delay, offset);
 
-
-//            if (j != n - 1)
+            if (j != n - 1)
                 sleep(8);
         }
 
         close(sockfd);
     }
-
 
     return 0;
 }
