@@ -190,7 +190,8 @@ int main(int argc, char **argv) {
             fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset1);
 
 
-            if (j != n - 1) sleep(8);
+//            if (j != n - 1)
+                sleep(8);
         }
 
         close(sockfd);
