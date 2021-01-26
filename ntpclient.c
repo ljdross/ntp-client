@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
 
-            offset = ((d[1] - d[0]) + (d[2] - d[3])) / 2;
+            offset = ((d[1] - d[0]) + (d[2] - d[3])) / (long double)2;
             rtt = (d[3] - d[0]) - (d[2] - d[1]);
             delay = rtt / 2;
 
