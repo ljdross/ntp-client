@@ -57,9 +57,8 @@ long double unmarshal_ntptimestamp_double(const uint8_t * timestamp_ptr) {
     uint32_t seconds = ntohl( *(uint32_t *) timestamp_ptr);
     long double sec = seconds - 2208988800; // 2208988800 seconds between year 1900 and 1970
     uint32_t fraction = ntohl( *(uint32_t *) (timestamp_ptr + 4));
-    fraction /= 4294967296;
-//    long double nsec = fraction;
-//    nsec /= 4294967296;
+    long double nsec = fraction;
+    nsec /= 4294967296;
     sec += fraction;
     return sec;
 }
@@ -83,6 +82,7 @@ int main(int argc, char **argv) {
     long double d[4];
     long double offset2, offset1, offset, rtt, delay, dispersion, max, min, t1, t2;
     const long double two = 2;
+    const long double onebillion = 1000000000;
     time_t offset_sec;
     long offset_nsec;
 
@@ -157,7 +157,11 @@ int main(int argc, char **argv) {
             t2 = unmarshal_ntptimestamp_double(buf + 40);
 
             for (int k = 0; k < 4; k++) {
-                d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
+                d[k] = t[k].tv_sec;
+                long double temp = t[k].tv_nsec;
+                temp /= onebillion;
+                d[k] += temp;
+//                d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
                 fprintf(stderr, "ntpclient: t%d: %lld.%.9ld\n", k + 1, (long long) t[k].tv_sec, t[k].tv_nsec);
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
