@@ -158,11 +158,11 @@ int main(int argc, char **argv) {
             t2 = unmarshal_ntptimestamp_double(buf + 40);
 
             for (int k = 0; k < 4; k++) {
-//                d[k] = t[k].tv_sec;
-//                long double temp = t[k].tv_nsec;
-//                temp /= onebillion;
-//                d[k] += temp;
-                d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
+                d[k] = t[k].tv_sec;
+                long double temp = t[k].tv_nsec;
+                temp /= onebillion;
+                d[k] += temp;
+//                d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
                 fprintf(stderr, "ntpclient: t%d: %lld.%.9ld\n", k + 1, (long long) t[k].tv_sec, t[k].tv_nsec);
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
