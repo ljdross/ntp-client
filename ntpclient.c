@@ -28,11 +28,11 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*) sa)->sin6_addr);
 }
 
-struct timespec unmarshal_ntpshort(const uint8_t * x) {
+struct timespec unmarshal_ntpshort(const uint8_t * timestamp_ptr) {
     struct timespec t;
-    uint16_t seconds = ntohs( *(uint16_t *) x);
+    uint16_t seconds = ntohs( *(uint16_t *) timestamp_ptr);
     t.tv_sec = seconds; // - 2208988800 not applicable for root dispersion
-    uint16_t fraction = ntohs( *(uint16_t *) (x + 2));
+    uint16_t fraction = ntohs( *(uint16_t *) (timestamp_ptr + 2));
     uint64_t nsec = fraction;
     nsec *= 1000000000;
     nsec /= 4294967296;
@@ -40,16 +40,27 @@ struct timespec unmarshal_ntpshort(const uint8_t * x) {
     return t;
 }
 
-struct timespec unmarshal_ntptimestamp(const uint8_t * x) {
+struct timespec unmarshal_ntptimestamp(const uint8_t * timestamp_ptr) {
     struct timespec t;
-    uint32_t seconds = ntohl( *(uint32_t *) x);
+    uint32_t seconds = ntohl( *(uint32_t *) timestamp_ptr);
     t.tv_sec = seconds - 2208988800; // 2208988800 seconds between year 1900 and 1970
-    uint32_t fraction = ntohl( *(uint32_t *) (x + 4));
+    uint32_t fraction = ntohl( *(uint32_t *) (timestamp_ptr + 4));
     uint64_t nsec = fraction;
     nsec *= 1000000000;
     nsec /= 4294967296;
     t.tv_nsec = nsec;
     return t;
+}
+
+
+long double unmarshal_ntptimestamp_double(const uint8_t * timestamp_ptr) {
+    uint32_t seconds = ntohl( *(uint32_t *) timestamp_ptr);
+    long double sec = seconds - 2208988800; // 2208988800 seconds between year 1900 and 1970
+    uint32_t fraction = ntohl( *(uint32_t *) (timestamp_ptr + 4));
+    long double nsec = fraction;
+    nsec /= 4294967296;
+    sec += nsec;
+    return sec;
 }
 
 
@@ -69,7 +80,8 @@ int main(int argc, char **argv) {
     struct timespec root_dispersion;
     struct timespec t[4];
     long double d[4];
-    long double offset1, offset, rtt, delay, dispersion, max, min;
+    long double offset2, offset1, offset, rtt, delay, dispersion, max, min, t1, t2;
+    const long double two = 2;
     time_t offset_sec;
     long offset_nsec;
 
@@ -139,7 +151,9 @@ int main(int argc, char **argv) {
 //            fprintf(stderr, "ntpclient: root_dispersion: %lld.%.9ld\n", (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec);
 
             t[1] = unmarshal_ntptimestamp(buf + 32);
+            t1 = unmarshal_ntptimestamp_double(buf + 32);
             t[2] = unmarshal_ntptimestamp(buf + 40);
+            t2 = unmarshal_ntptimestamp_double(buf + 40);
 
             for (int k = 0; k < 4; k++) {
                 d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
@@ -147,9 +161,12 @@ int main(int argc, char **argv) {
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
 
-            offset1 = ((d[1] - d[0]) + (d[2] - d[3])) / (long double)2;
-            offset_sec = ((t[1].tv_sec - t[0].tv_sec) + (t[2].tv_sec - t[3].tv_sec)) / 2;
-            offset_nsec = ((t[1].tv_nsec - t[0].tv_nsec) + (t[2].tv_nsec - t[3].tv_nsec)) / 2;
+            offset2 = ((t1 - d[0]) + (t2 - d[3])) / two;
+
+            offset1 = ((d[1] - d[0]) + (d[2] - d[3])) / two;
+
+            offset_sec = ((t[1].tv_sec - t[0].tv_sec) + (t[2].tv_sec - t[3].tv_sec)) / (time_t)2;
+            offset_nsec = ((t[1].tv_nsec - t[0].tv_nsec) + (t[2].tv_nsec - t[3].tv_nsec)) / (long)2;
             offset = (long double) offset_sec + ((long double) offset_nsec / (long double) 1000000000);
 
             rtt = (d[3] - d[0]) - (d[2] - d[1]);
@@ -165,7 +182,7 @@ int main(int argc, char **argv) {
             dispersion = max - min;
 
 //            fprintf(stdout, "%Lf\n", offset1);
-            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset);
+            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset2);
 
 
             if (j != n - 1) sleep(8);
