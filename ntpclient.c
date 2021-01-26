@@ -40,6 +40,16 @@ struct timespec unmarshal_ntpshort(const uint8_t * timestamp_ptr) {
     return t;
 }
 
+long double unmarshal_ntpshort_double(const uint8_t * timestamp_ptr) {
+    uint16_t seconds = ntohs( *(uint16_t *) timestamp_ptr);
+    long double sec = seconds; // - 2208988800 not applicable for root dispersion
+    uint16_t fraction = ntohs( *(uint16_t *) (timestamp_ptr + 2));
+    long double nsec = fraction;
+    nsec /= 4294967296;
+    sec += nsec;
+    return sec;
+}
+
 struct timespec unmarshal_ntptimestamp(const uint8_t * timestamp_ptr) {
     struct timespec t;
     uint32_t seconds = ntohl( *(uint32_t *) timestamp_ptr);
@@ -80,7 +90,7 @@ int main(int argc, char **argv) {
     struct timespec root_dispersion;
     struct timespec t[4];
     long double d[4];
-    long double offset2, offset1, offset, rtt, delay, dispersion, max, min, t1, t2;
+    long double root_disp_double, offset2, offset1, offset, rtt, delay, dispersion, max, min, t1, t2;
     const long double two = 2;
     const long double onebillion = 1000000000;
     time_t offset_sec;
@@ -153,6 +163,7 @@ int main(int argc, char **argv) {
             fprintf(stderr, "\"\n");
 
             root_dispersion = unmarshal_ntpshort(buf + 8);
+            root_disp_double = unmarshal_ntpshort_double(buf + 8);
 //            fprintf(stderr, "ntpclient: root_dispersion: %lld.%.9ld\n", (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec);
 
             t[1] = unmarshal_ntptimestamp(buf + 32);
@@ -190,8 +201,8 @@ int main(int argc, char **argv) {
             }
             dispersion = max - min;
 
-//            fprintf(stdout, "%Lf\n", offset1);
-            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset2);
+//            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset2);
+            fprintf(stdout, "%s;%d;%Lf;%Lf;%Lf;%Lf\n", argv[i], j, root_disp_double, dispersion, delay, offset2);
 
 
 //            if (j != n - 1)
