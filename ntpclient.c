@@ -35,7 +35,7 @@ struct timespec unmarshal_ntpshort(const uint8_t * timestamp_ptr) {
     uint16_t fraction = ntohs( *(uint16_t *) (timestamp_ptr + 2));
     uint64_t nsec = fraction;
     nsec *= 1000000000;
-    nsec /= 4294967296;
+    nsec /= 65536;
     t.tv_nsec = nsec;
     return t;
 }
@@ -45,7 +45,7 @@ long double unmarshal_ntpshort_double(const uint8_t * timestamp_ptr) {
     long double sec = seconds; // - 2208988800 not applicable for root dispersion
     uint16_t fraction = ntohs( *(uint16_t *) (timestamp_ptr + 2));
     long double nsec = fraction;
-    nsec /= 4294967296;
+    nsec /= 65536;
     sec += nsec;
     return sec;
 }
