@@ -178,8 +178,8 @@ int main(int argc, char **argv) {
             offset_nsec = ((t[1].tv_nsec - t[0].tv_nsec) + (t[2].tv_nsec - t[3].tv_nsec)) / (long)2;
             offset = (long double) offset_sec + ((long double) offset_nsec / (long double) 1000000000);
 
-            rtt = (d[3] - d[0]) - (d[2] - d[1]);
-            delay = rtt / 2;
+            rtt = (d[3] - d[0]) - (t2 - t1);
+            delay = rtt / two;
 
             latest_rtt[j % 8] = rtt;
             max = latest_rtt[0];
