@@ -143,8 +143,8 @@ int main(int argc, char **argv) {
                     perror("recvfrom");
                     exit(1);
                 }
-                clock_gettime(CLOCK_REALTIME, &t[3]); // TODO: check for errors
             }
+            clock_gettime(CLOCK_REALTIME, &t[3]); // TODO: check for errors
 
             fprintf(stderr, "ntpclient: got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s)));
             fprintf(stderr, "ntpclient: packet is %d bytes long\n", numbytes);
