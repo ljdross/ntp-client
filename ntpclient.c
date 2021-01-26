@@ -157,11 +157,11 @@ int main(int argc, char **argv) {
             t2 = unmarshal_ntptimestamp_double(buf + 40);
 
             for (int k = 0; k < 4; k++) {
-                d[k] = t[k].tv_sec;
-                long double temp = t[k].tv_nsec;
-                temp /= onebillion;
-                d[k] += temp;
-//                d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
+//                d[k] = t[k].tv_sec;
+//                long double temp = t[k].tv_nsec;
+//                temp /= onebillion;
+//                d[k] += temp;
+                d[k] = (long double) t[k].tv_sec + ((long double) t[k].tv_nsec / (long double) 1000000000);
                 fprintf(stderr, "ntpclient: t%d: %lld.%.9ld\n", k + 1, (long long) t[k].tv_sec, t[k].tv_nsec);
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
             dispersion = max - min;
 
 //            fprintf(stdout, "%Lf\n", offset1);
-            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset2);
+            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset1);
 
 
             if (j != n - 1) sleep(8);
