@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
             fprintf(stderr, "ntpclient: waiting to recvfrom...\n");
 
             addr_len = sizeof(their_addr);
-            if ((numbytes = recvfrom(sockfd, buf, 48, 0, (struct sockaddr *) &their_addr, &addr_len)) == -1) {
+            if ((numbytes = recvfrom(sockfd, buf, 48, 0, (struct sockaddr *) &their_addr, &addr_len)) != 48) {
                 perror("recvfrom");
                 exit(1);
             }
