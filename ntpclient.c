@@ -59,7 +59,7 @@ long double unmarshal_ntptimestamp_double(const uint8_t * timestamp_ptr) {
     uint32_t fraction = ntohl( *(uint32_t *) (timestamp_ptr + 4));
     long double nsec = fraction;
     nsec /= 4294967296;
-    sec += fraction;
+    sec += nsec;
     return sec;
 }
 
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
             dispersion = max - min;
 
 //            fprintf(stdout, "%Lf\n", offset1);
-            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lg;%Lg;%Lg\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset1);
+            fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset2);
 
 
 //            if (j != n - 1)
