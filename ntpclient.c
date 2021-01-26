@@ -69,7 +69,9 @@ int main(int argc, char **argv) {
     struct timespec root_dispersion;
     struct timespec t[4];
     long double d[4];
-    long double offset, rtt, delay, dispersion, max, min;
+    long double offset1, offset, rtt, delay, dispersion, max, min;
+    time_t offset_sec;
+    long offset_nsec;
 
     if (argc < 3) {
         fprintf(stderr, "usage: ntpclient number_of_requests_per_server server1 server2 server3 ...\n");
@@ -145,7 +147,11 @@ int main(int argc, char **argv) {
 //                fprintf(stderr, "ntpclient: t%d: %Lf\n", k + 1, d[k]);
             }
 
-            offset = ((d[1] - d[0]) + (d[2] - d[3])) / (long double)2;
+            offset1 = ((d[1] - d[0]) + (d[2] - d[3])) / (long double)2;
+            offset_sec = ((t[1].tv_sec - t[0].tv_sec) + (t[2].tv_sec - t[3].tv_sec)) / 2;
+            offset_nsec = ((t[1].tv_nsec - t[0].tv_nsec) + (t[2].tv_nsec - t[3].tv_nsec)) / 2;
+            offset = (long double) offset_sec + ((long double) offset_nsec / (long double) 1000000000);
+
             rtt = (d[3] - d[0]) - (d[2] - d[1]);
             delay = rtt / 2;
 
@@ -158,6 +164,7 @@ int main(int argc, char **argv) {
             }
             dispersion = max - min;
 
+//            fprintf(stdout, "%Lf\n", offset1);
             fprintf(stdout, "%s;%d;%lld.%.9ld;%Lf;%Lf;%Lf\n", argv[i], j, (long long) root_dispersion.tv_sec, root_dispersion.tv_nsec, dispersion, delay, offset);
 
 
