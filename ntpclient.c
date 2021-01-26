@@ -126,18 +126,18 @@ int main(int argc, char **argv) {
         freeaddrinfo(servinfo);
 
         for (int j = 0; j < n; j++) {
+            if ((numbytes = sendto(sockfd, msg, 48, 0, p->ai_addr, p->ai_addrlen)) == -1) {
+                perror("ntpclient: sendto()");
+                exit(1);
+            }
+            clock_gettime(CLOCK_REALTIME, &t[0]); // TODO: check for errors, maybe move behind sendto()?
+
+            fprintf(stderr, "ntpclient: sent %d bytes to %s\n", numbytes, argv[i]);
+            fprintf(stderr, "ntpclient: waiting to recvfrom...\n");
+
             addr_len = sizeof(their_addr);
             numbytes = 0;
             while ( numbytes < 48 ) {
-                clock_gettime(CLOCK_REALTIME, &t[0]); // TODO: check for errors, maybe move behind sendto()?
-                if ((numbytes = sendto(sockfd, msg, 48, 0, p->ai_addr, p->ai_addrlen)) == -1) {
-                    perror("ntpclient: sendto()");
-                    exit(1);
-                }
-
-                fprintf(stderr, "ntpclient: sent %d bytes to %s\n", numbytes, argv[i]);
-                fprintf(stderr, "ntpclient: waiting to recvfrom...\n");
-
                 memset(buf, 0 , 48);
                 if ((numbytes = recvfrom(sockfd, buf, 48, 0, (struct sockaddr *) &their_addr, &addr_len)) == -1) {
                     perror("recvfrom");
